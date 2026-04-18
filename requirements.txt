@@ -1,0 +1,44 @@
+# =============================================================================
+# requirements.txt — Drug Repurposing AI
+#
+# Pinned to versions verified working in Google Colab with the reference
+# pipeline. PyTDC==1.0.0 is critical — it avoids the PyTDC>=1.1.0→
+# moleculeace→gget chain which adds 79MB+ of downloads and breaks scikit-learn.
+# =============================================================================
+
+# ── Web framework ─────────────────────────────────────────────────────────────
+fastapi==0.111.0
+uvicorn[standard]==0.30.1
+pydantic==2.7.1
+pydantic-settings==2.3.1
+
+# ── HTTP client (async) ───────────────────────────────────────────────────────
+httpx==0.27.0
+
+# ── Cheminformatics (rdkit wheel — Colab-verified) ────────────────────────────
+rdkit==2023.9.6
+
+# ── DeepPurpose hard dependencies (must be installed before DeepPurpose) ──────
+# descriptastorus is installed as a separate Docker layer to avoid timeouts
+pandas-flavor==0.8.1
+
+# ── Drug-target interaction ───────────────────────────────────────────────────
+DeepPurpose==0.1.5
+
+# ── Therapeutics Data Commons (Colab-verified: 1.0.0 avoids moleculeace/gget) ─
+PyTDC==1.0.0
+
+# ── Scientific computing (Colab-verified versions) ────────────────────────────
+pandas==2.2.2
+requests==2.32.4
+numpy
+biopython
+
+# --- Installed Versions for Requirements ---
+# DeepPurpose==0.1.5
+# rdkit==2023.9.6
+# descriptastorus==2.7.0.3
+# pandas-flavor==0.8.1
+# PyTDC==1.0.0
+# pandas==2.2.2
+# requests==2.32.4

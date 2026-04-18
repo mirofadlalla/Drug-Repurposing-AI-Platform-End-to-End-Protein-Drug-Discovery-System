@@ -1,0 +1,21 @@
+# 🔐 Environment variables
+.env
+.env.*
+
+# 🐍 Python
+__pycache__/
+*.py[cod]
+*.pyo
+
+# 🧪 Virtual environments
+.venv/
+venv/
+
+# 📊 Generated results / experiments
+.results/
+.save_folder/
+
+# 📁 Data
+data/
+*.sqlite3
+
