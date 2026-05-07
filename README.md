@@ -166,6 +166,9 @@ Final Drug Candidates
 ### Stage 3 — Drug Library
 
 * Load 5000+ approved drugs
+* **First request**: Fetches from TDC API
+* **Auto-cached**: Stores in `/data/tdc_drugs_cache.json`
+* **Subsequent**: Load from cache instantly ⚡
 
 ### Stage 4 — AI Predictions
 
@@ -194,6 +197,32 @@ docker-compose up --build
 
 ```
 http://localhost:8000/docs
+```
+
+---
+
+## 💾 Smart Caching System
+
+### Disease Targets Cache
+Each disease lookup caches results in `/data/cache_*.json`:
+- **First query**: ~5-10 seconds (API → Open Targets, UniProt)
+- **Cached query**: ~1ms (instant file read)
+
+### Drug Library Cache (TDC)
+TDC ADME dataset cached after first load:
+- **First run**: ~10 seconds (downloads from TDC API)
+- **Subsequent runs**: < 1 second (loads from `/data/tdc_drugs_cache.json`)
+- **Bonus**: In-memory `@lru_cache` for session duration
+
+### Data Folder Structure
+```
+data/
+├── half_life_obach.tab           # Original TDC data
+├── tdc_drugs_cache.json          # Cached TDC drug library
+├── cache_type_2_diabetes.json    # Disease-specific targets cache
+├── cache_asthma.json
+├── cache_covid_19.json
+└── ...                            # One JSON file per disease queried
 ```
 
 ---

@@ -287,8 +287,30 @@ Smaller `top_k` values don't significantly reduce runtime, but can speed up resp
 ### 3. Batch Requests Carefully
 The server runs heavy AI computations. Avoid simultaneous full screenings on limited hardware.
 
-### 4. Cache Results
-If you're working with the same disease repeatedly, store the JSON results locally.
+### 4. Benefit from Automatic Caching 🚀
+**The system automatically caches everything:**
+
+- **Disease targets**: First query to "Type 2 Diabetes" takes 5-10s, repeats take ~1ms
+- **Drug library**: First full screening downloads TDC (~10s), subsequent runs load cache (~0.1s)
+
+**How it works**:
+```
+First request:  User → API → Open Targets API / TDC API → Cache files created
+Second request: User → API → Read from /data/ folder → Instant ⚡
+```
+
+You don't need to do anything — just call the API multiple times for massive speed improvements!
+
+**Cache locations**:
+- Disease targets: `/data/cache_{disease_name}.json`
+- TDC drugs: `/data/tdc_drugs_cache.json`
+
+**Optional**: Also store responses locally for offline use
+```python
+import json
+with open('disease_results.json', 'w') as f:
+    json.dump(response.json(), f)
+```
 
 ---
 
@@ -313,6 +335,18 @@ If you're working with the same disease repeatedly, store the JSON results local
 - Full screening takes 2-5 minutes — be patient!
 - For long-running requests, use a timeout > 5 minutes on your client
 - Python example: `requests.post(..., timeout=300)`
+
+### Clear Cache to Force Fresh Data
+If you need to refresh cache (e.g., OpenTargets updated disease info):
+```bash
+# Remove cached disease target
+rm data/cache_covid_19.json
+
+# Remove cached drug library  
+rm data/tdc_drugs_cache.json
+
+# Next request will refetch fresh data from APIs
+```
 
 ---
 

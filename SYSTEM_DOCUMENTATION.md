@@ -99,6 +99,17 @@ Drug_2: CC(=O)Nc1ccc(O)cc1  (Paracetamol)
 
 **Count**: ~5,000–10,000 drugs per run (depends on dataset version)
 
+**Intelligent Caching Strategy**:
+1. **First request**: Fetches complete ADME dataset from TDC API (~10s)
+2. **File persistence**: Saves all drugs to `/data/tdc_drugs_cache.json`
+3. **Repeat requests**: Loads from cache file (~0.1s) — no API calls needed
+4. **Session cache**: Uses `@lru_cache(maxsize=1)` decorator for in-memory caching
+
+**Benefits**:
+- ⚡ **Speed**: Skip 10s TDC download on subsequent runs
+- 🌐 **Offline**: Works without Internet after first fetch
+- 📊 **Efficient**: Single-load strategy for batch screening
+
 ---
 
 ### **Stage 4: AI Prediction Engine (DeepPurpose)**
@@ -232,12 +243,18 @@ GET /api/v1/targets/{disease_name}
 ## 🏗️ Service Layer Architecture
 
 ### **target_service.py**
-- `fetch_disease_targets()` — Stage 1 (Open Targets)
-- `enrich_targets_with_sequences()` — Stage 2 (UniProt)
-- `get_pdb_ids()` — PDB lookup for targets
+- `fetch_disease_targets()` — Stage 1 (Open Targets GraphQL)
+- `enrich_targets_with_sequences()` — Stage 2 (UniProt sequences)
+- `fetch_pdb_ids()` — Fetch 3D structure references
+- `save_to_cache()` / `load_from_cache()` — Disease target persistence
+- **Cache**: `/data/cache_{disease_name}.json`
 
 ### **drug_service.py**
-- `get_drug_library()` — Stage 3 (TDC)
+- `get_drug_library()` — Main public API for Stage 3
+- `_fetch_tdc_drugs()` — Fetches fresh data from TDC API
+- `_load_drugs_from_cache()` — Loads from local JSON
+- `_save_drugs_to_cache()` — Persists to `/data/tdc_drugs_cache.json`
+- `_load_tdc_drugs()` — Smart loader (cache-first strategy)
 
 ### **ai_service.py**
 - `run_virtual_screening()` — Stages 4 & 5 (DeepPurpose)
@@ -308,14 +325,14 @@ Stage 5: Top ranked results:
 
 ## 📈 Performance Metrics
 
-| Operation | Time | Notes |
-|-----------|------|-------|
-| Disease search (Stage 1) | ~1s | API call |
-| UniProt enrichment (Stage 2) | ~2–3s | 10 sequential requests |
-| Drug library load (Stage 3) | ~5–10s | TDC dataset download |
-| AI predictions (Stage 4) | ~1–3 min | Batch processing, GPU if available |
-| Total pipeline | **2–5 min** | Per disease |
-| Quick lookup (Stages 1–2 only) | **5–10s** | No AI predictions |
+| Operation | First Request | Cached Request | Notes |
+|-----------|---|---|-------|
+| Disease search (Stage 1) | ~1s | ~1ms ⚡ | API → Cache file |
+| UniProt enrichment (Stage 2) | ~2–3s | ~1ms ⚡ | 10 sequential API calls saved |
+| Drug library load (Stage 3) | ~10s | <0.1s ⚡ | TDC download → cache file |
+| AI predictions (Stage 4) | ~1–3 min | N/A | Always runs (no caching) |
+| **Full pipeline** | **2–5 min** | **~2s for targets + 1–3min AI** | First run slower, repeats much faster |
+| Quick lookup (Stages 1–2) | **5–10s** | **~1ms** | Best improvement via caching |
 
 ---
 
